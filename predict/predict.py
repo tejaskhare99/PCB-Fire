@@ -22,7 +22,7 @@ def predict(image):
 	LABELS = open(labelsPath).read().strip().split("\n")
 
 	(H, W) = image.shape[:2]
-	blob = cv2.dnn.blobFromImage(image, 1 / 255.0, (416, 416),
+	blob = cv2.dnn.blobFromImage(image, 1 / 255.0, (608, 608),
 		   swapRB=True, crop=False)
 	net.setInput(blob)
 	layerOutputs = net.forward(ln)# Initializing for getting box coordinates, confidences, classid 
@@ -97,13 +97,12 @@ def predict(image):
 	return image, boxes, LABELS, classIDs
 
 
-
 def run():
 
-	frame1 = cv2.imread('D:/image_537.jpg') 
+	frame1 = cv2.imread('D:/image_350.jpg') 
 	# frame = cv2.imread('D:/Dataset/Assembled_PCB/26.png') 
-	frame2 = cv2.imread('D:/image_537c.jpg') 
-	# print(frame1.shape)
+	frame2 = cv2.imread('D:/image_350c.jpg') 
+	# # print(frame1.shape)
 	if frame1.shape[0] > 1000:
 		scale_percent = 25
 		
@@ -118,33 +117,58 @@ def run():
 	img2, box2, l2, id2 = predict(frame2)
 	print("1: ", np.asarray(box1))
 	print("\n2: ", np.asarray(box2))
-	c = 1
 	co = []
 	label = []
-	for i in range(len(box1)): 
-		for j in range(len(box2)): 
-			if (box1[i] != box2[j]): 
-				c += 1
-				if c == len(box2):
-					print("Mis ", box1[i])
-					co.append(box1[i])
-					label.append(l1[id1[i]])
+	flag = []
+
+	for A in range(len(box1)):
+	    flag.append('not_found')
+
+
+	for x in range(len(box1)):
+	    for y in range(len(box2)):
+	        a_ar = box1[x]
+	        b_ar = box2[y]
+	        a_xc = a_ar[0]
+	        a_yc = a_ar[1]
+	        a_hc = a_ar[2]
+	        a_wc = a_ar[3]
+
+	        b_xc = b_ar[0]
+	        b_yc = b_ar[1]
+	        b_hc = b_ar[2]
+	        b_wc = b_ar[3]
+
+	        if a_xc-5<= b_xc <= a_xc+5:
+	            if a_yc-5<= b_yc <= a_yc+5:
+	                if a_hc-5<= b_hc <= a_hc+5:
+	                    if a_wc-5<= b_wc <= a_wc+5:
+	                        flag[x]='found'
+
+	        else:
+	            pass
+
+
+	for l in range(len(flag)):
+	    if(flag[l]=='not_found'):
+	#         print('element number {} is not found'.format(l+1))
+	        co.append(box1[l])
+	        label.append(l1[id1[l]])
 	print("CO: ", co)
 	print(label)
 	# print(id1)
-	cv2.imshow('missing', img2)
-	cv2.waitKey(0)
-	cv2.destroyAllWindows()	
-						
+	
+	frame2 = cv2.imread('D:/image_350c.jpg') 
+	frame2 = cv2.resize(frame2, (width, height), interpolation = cv2.INTER_AREA)					
 	for i in range(len(co)):
 		(x, y) = (co[i][0], co[i][1])
 		(w, h) = (co[i][2], co[i][3])  
-		color = (0,169,255)	    
+		color = (255,255,0)	    
 		cv2.rectangle(frame2, (x, y), (x + w, y + h), color, 1)
 		cv2.putText(frame2, "Missing " + label[i], (x + w, y + h), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2) 
 
 	cv2.imshow('output', img1)
-	cv2.imshow('missing', img2)
+	cv2.imshow('missing', frame2)
 	cv2.waitKey(0)
 	cv2.destroyAllWindows()	
 
@@ -152,13 +176,3 @@ def run():
 #     plt.plot()
 
 run()
-
-
-
-
-
-
-
-# x = np.asarray([[1, 2, 3, 4], [22, 4, 1, 4]])
-# x = np.pad(x, [(0, 1), (0, 0)], mode='constant')
-# print(x)
